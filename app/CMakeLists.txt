@@ -22,21 +22,24 @@ add_library( # Sets the name of the library.
              ${PROJECT_SOURCE_DIR}/libs/framework/svrAndroidMain.cpp
              ${PROJECT_SOURCE_DIR}/libs/framework/svrUtil.cpp
              ${PROJECT_SOURCE_DIR}/libs/framework/svrContainers.cpp
-             ${PROJECT_SOURCE_DIR}/libs/framework/svrRenderTarget.cpp
-             ${PROJECT_SOURCE_DIR}/libs/framework/svrInput.cpp
-             ${PROJECT_SOURCE_DIR}/libs/imgui/imgui.cpp
+             ${PROJECT_SOURCE_DIR}/libs/framework/svrConfig.cpp
+             ${PROJECT_SOURCE_DIR}/libs/framework/svrCpuTimer.cpp
+             ${PROJECT_SOURCE_DIR}/libs/private/svrApiHelper.cpp
+             ${PROJECT_SOURCE_DIR}/libs/private/svrApiPredictiveSensor.cpp
+             ${PROJECT_SOURCE_DIR}/libs/private/svrApiCore.cpp
+             ${PROJECT_SOURCE_DIR}/libs/private/svrApiVersion.cpp
              ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
              )
 
-add_library( #qvrservice_client
-             svrapi
+add_library( qvrservice_client
+             #svrapi
              SHARED
              IMPORTED )
 
 
 
 include_directories( libs/framework )
-include_directories( libs/imgui )
+include_directories( libs )
 include_directories( libs/glm-0.9.7.0 )
 include_directories( libs/qvr/inc )
 include_directories( libs/inc )
@@ -78,15 +81,15 @@ find_library( # Sets the name of the path variable.
 
 #add third party library
 set_target_properties( # Specifies the target library.
-                       #qvrservice_client
-                       svrapi
+                        qvrservice_client
+                        #svrapi
 
                        # Specifies the parameter you want to define.
                        PROPERTIES IMPORTED_LOCATION
 
                        # Provides the path to the library you want to import.
-                       #${PROJECT_SOURCE_DIR}/libs/qvr/lib/libqvrservice_client.so
-                       ${PROJECT_SOURCE_DIR}/libs/qvr/lib/libsvrapi.so
+                       ${PROJECT_SOURCE_DIR}/libs/qvr/lib/libqvrservice_client.so
+#                       ${PROJECT_SOURCE_DIR}/libs/qvr/lib/libsvrapi.so
                        )
 
 # Specifies libraries CMake should link to your target library. You
@@ -96,9 +99,9 @@ set_target_properties( # Specifies the target library.
 target_link_libraries( # Specifies the target library.
                        native-lib
 
+                        qvrservice_client
                        # Links the target library to the log library
                        # included in the NDK.
-                       svrapi
                        ${log-lib}
                        ${android-lib}
                        ${EGL-lib}

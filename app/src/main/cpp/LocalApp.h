@@ -18,15 +18,14 @@
 
 #include <math.h>
 
-#include "imgui.h"
 
 #include "svrApplication.h"
 #include "svrCpuTimer.h"
-#include "svrGeometry.h"
-#include "svrGpuTimer.h"
-#include "svrKtxLoader.h"
-#include "svrRenderTarget.h"
-#include "svrShader.h"
+//#include "svrGeometry.h"
+//#include "svrGpuTimer.h"
+//#include "svrKtxLoader.h"
+//#include "svrRenderTarget.h"
+//#include "svrShader.h"
 #include "svrUtil.h"
 
 #include "glm/glm.hpp"
@@ -60,7 +59,7 @@ public:
     void Shutdown();
     void Update();
     void Render();
-    void AllocateEyeBuffers();
+
 
 private:
     void *  GetFileBuffer(const char *pFileName, int *bufferSize);
@@ -78,7 +77,7 @@ private:
 
     void    InitializeModel(const char* path);
 
-    void    InitializeShader(Svr::SvrShader &whichShader, const char* vertexPath, const char* fragmentPath, const char* vertexName, const char* fragmentName);
+    //void    InitializeShader(Svr::SvrShader &whichShader, const char* vertexPath, const char* fragmentPath, const char* vertexName, const char* fragmentName);
 
 
 private:
@@ -95,21 +94,10 @@ private:
 
     float                       mMdlRotation;
 
-    glm::fquat                  mBasisQuat;
-    glm::mat4                   mBasisMtx;
+
 
     Svr::SvrBufferedCpuTimer    mFrameTimer;
-    Svr::SvrGpuTimer            mGpuTimer;
 
-    Svr::SvrGeometry*           mpModel;
-    Svr::SvrShader              mModelShader;
-    Svr::SvrShader              mMultiViewShader;
-
-    // For testing, we sometimes want a simple grid
-    GLuint                      mGridTexture;
-
-    // Or an image with an obvious orientation
-    GLuint                      mOrientationTexture;
 
     // Testing overlay
     GLuint                      mOverlayTextures[kNumOverlayImages];
@@ -119,19 +107,6 @@ private:
     int                         mImageWidth;
     int                         mImageHeight;
 
-    // For Blitting
-    Svr::SvrGeometry            mBlitMesh;
-    Svr::SvrShader              mBlitShader;
 
-
-    // The Render Targets
-    int                         mCurrentEyeBuffer;
-    Svr::SvrRenderTarget        mEyeBuffers[SVR_NUM_EYE_BUFFERS][SVR_NUM_EYES];
-
-    int                         mMultiViewSlices;
-    int                         mMultiViewWidth;
-    int                         mMultiViewHeight;
-    int                         mMultiViewSamples;
-    MultiViewBuffer             mMultiViewBuffers[SVR_NUM_EYE_BUFFERS];
 };
 #endif //LOCALACTIVITY_LOCALAPP_H

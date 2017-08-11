@@ -12,7 +12,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                cppFlags "-frtti -fexceptions"
+                cppFlags "-frtti -fexceptions -DUSE_QVR_SERVICE -DGL_SAMPLER_EXTERNAL_OES=36198"
             }
         }
         ndk {
@@ -44,5 +44,4 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.0'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.0'
-    implementation files('libs/qvr/lib/svrApi.jar')
 }

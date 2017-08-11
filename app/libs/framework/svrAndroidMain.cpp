@@ -356,109 +356,7 @@ void CommandCallback(android_app* pApp, int32_t cmd)
     }
 }
 
-int InputCallback(android_app* pApp, AInputEvent* event)
-{
-    Svr::SvrApplication* pFrmApp = (Svr::SvrApplication*)pApp->userData;
 
-    // Want touch events in [0,1] for width [Left, Right] and height [Bottom, Top]
-    // Actually, we want screen size here, NOT surface size,
-    // Touch events come in as screen size so where you are touching gets messed up.
-    //float fltWidth = (float)pFrmApp->GetWindowWidth();
-    //float fltHeight = (float)pFrmApp->GetWindowHeight();
-    float fltWidth = (float)ANativeWindow_getWidth(pApp->window);
-    float fltHeight = (float)ANativeWindow_getHeight(pApp->window);
-
-    // A key is pressed
-    if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_KEY)
-    {
-        // See <AndroidNDK>\platforms\android-9\arch-arm\usr\include\android\input.h
-        int iKeyCode = AKeyEvent_getKeyCode(event);
-        int iKeyAction = AInputEvent_getType(event);
-
-        switch (iKeyAction)
-        {
-        case AKEY_EVENT_ACTION_DOWN:
-            pFrmApp->GetInput().KeyDownEvent(iKeyCode);
-            break;
-        case AKEY_EVENT_ACTION_UP:
-            pFrmApp->GetInput().KeyUpEvent(iKeyCode);
-            break;
-        case AKEY_EVENT_ACTION_MULTIPLE:
-            break;
-        }
-
-        return 0;
-    }
-
-    // Touch the screen
-    if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION)
-    {
-        // See <AndroidNDK>\platforms\android-9\arch-arm\usr\include\android\input.h
-        float fltOneX = 0.0f;
-        float fltOneY = 0.0f;
-
-        int iPointerAction = AMotionEvent_getAction(event);
-        int iPointerIndx = (iPointerAction & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-        int iPointerID = AMotionEvent_getPointerId(event, iPointerIndx);
-        int iAction = (iPointerAction & AMOTION_EVENT_ACTION_MASK);
-        switch (iAction)
-        {
-        case AMOTION_EVENT_ACTION_POINTER_DOWN:
-        case AMOTION_EVENT_ACTION_DOWN:
-            fltOneX = AMotionEvent_getX(event, iPointerIndx);
-            fltOneY = AMotionEvent_getY(event, iPointerIndx);
-            pFrmApp->GetInput().PointerDownEvent(iPointerID, fltOneX / fltWidth, fltOneY / fltHeight);
-            break;
-        
-        case AMOTION_EVENT_ACTION_POINTER_UP:
-        case AMOTION_EVENT_ACTION_UP:
-            //LogInfo("AMOTION_EVENT_ACTION_[POINTER]_UP: 0x%x", iPointerID);
-            fltOneX = AMotionEvent_getX(event, iPointerIndx);
-            fltOneY = AMotionEvent_getY(event, iPointerIndx);
-            pFrmApp->GetInput().PointerUpEvent(iPointerID, fltOneX / fltWidth, fltOneY / fltHeight);
-            break;
-        
-        case AMOTION_EVENT_ACTION_MOVE:
-            {
-                int iHistorySize = AMotionEvent_getHistorySize(event);
-                int iPointerCount = AMotionEvent_getPointerCount(event);
-                for (int iHistoryIndx = 0; iHistoryIndx < iHistorySize; iHistoryIndx++)
-                {
-                    for (int iPointerIndx = 0; iPointerIndx < iPointerCount; iPointerIndx++)
-                    {
-                        iPointerID = AMotionEvent_getPointerId(event, iPointerIndx);
-                        fltOneX = AMotionEvent_getHistoricalX(event, iPointerIndx, iHistoryIndx);
-                        fltOneY = AMotionEvent_getHistoricalY(event, iPointerIndx, iHistoryIndx);
-                        // LogInfo("    PointerID %d => (%0.2f, %0.2f)", iPointerID, fltOneX, fltOneY);
-                    }
-                }
-        
-                for (int iPointerIndx = 0; iPointerIndx < iPointerCount; iPointerIndx++)
-                {
-                    iPointerID = AMotionEvent_getPointerId(event, iPointerIndx);
-                    fltOneX = AMotionEvent_getX(event, iPointerIndx);
-                    fltOneY = AMotionEvent_getY(event, iPointerIndx);
-                    // LogInfo("    PointerID %d => (%0.2f, %0.2f)", iPointerID, fltOneX, fltOneY);
-                    pFrmApp->GetInput().PointerMoveEvent(iPointerID, fltOneX / fltWidth, fltOneY / fltHeight);
-                }
-        
-            }
-        break;
-        
-        case AMOTION_EVENT_ACTION_CANCEL:
-            LOGI("AMOTION_EVENT_ACTION_CANCEL: 0x%x", iPointerID);
-            break;
-        
-        case AMOTION_EVENT_ACTION_OUTSIDE:
-            LOGI("AMOTION_EVENT_ACTION_OUTSIDE: 0x%x", iPointerID);
-            break;
-        }
-        
-        return 1;
-    }
-
-    return 0;
-}
 
 void android_main(android_app *pAppState)
 {
@@ -485,7 +383,7 @@ void android_main(android_app *pAppState)
     svrInitParams initParams;
     initParams.javaVm = pAppState->activity->vm;
     (*pAppState->activity->vm).AttachCurrentThread(&initParams.javaEnv, NULL);
-    initParams.javaActivityObject = pAppState->activity->clazz;
+    initParams.javaActivityObject = NULL; //pAppState->activity->clazz;
 
     if (!svrInitialize(&initParams))
     {
@@ -496,7 +394,7 @@ void android_main(android_app *pAppState)
 
     pAppState->userData = pApp;
     pAppState->onAppCmd = CommandCallback;
-    pAppState->onInputEvent = InputCallback;
+    //pAppState->onInputEvent = InputCallback;
 
     SvrApplicationContext& appContext = pApp->GetApplicationContext();
     appContext.activity = pAppState->activity;
@@ -546,7 +444,8 @@ void android_main(android_app *pAppState)
             beginParams.cpuPerfLevel = appContext.cpuPerfLevel;
             beginParams.gpuPerfLevel = appContext.gpuPerfLevel;
 
-            beginParams.nativeWindow = appContext.nativeWindow;
+            //beginParams.nativeWindow = appContext.nativeWindow;
+            beginParams.nativeWindow = NULL;
             beginParams.mainThreadId = gettid();
 
             svrBeginVr(&beginParams);
@@ -568,8 +467,8 @@ void android_main(android_app *pAppState)
             pApp->Update();
             pApp->Render();
         
-            EGLSurface surface = eglGetCurrentSurface(EGL_DRAW);
-            eglSwapBuffers(appContext.display, surface);
+            //EGLSurface surface = eglGetCurrentSurface(EGL_DRAW);
+            //eglSwapBuffers(appContext.display, surface);
         
             appContext.frameCount++;
         }

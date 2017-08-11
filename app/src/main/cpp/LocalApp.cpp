@@ -14,7 +14,7 @@
 #include "svrUtil.h"
 #include "LocalApp.h"
 
-#include "svrConfig.h"
+//#include "svrConfig.h"
 
 #define PROFILE_EYE_RENDERING   0
 
@@ -64,26 +64,7 @@ enum eRenderMode
 eRenderMode gRenderMode = kRenderModeSingle;
 
 // Configuration Variables
-VAR(int, gRenderTargetType, 0, kVariableNonpersistent);
 
-// MSAA samples: 1 = Off; 2/4 = Number of MSAA samples
-VAR(int, gMsaaSamples, 1, kVariableNonpersistent);
-
-VAR(bool, gEnableLensDistortion, true, kVariableNonpersistent);
-VAR(bool, gEnableChromaticAberration, true, kVariableNonpersistent);
-
-VAR(bool, gTouchTogglesSubmitFrame, false, kVariableNonpersistent);
-VAR(bool, gForceGridTexture, false, kVariableNonpersistent);
-VAR(bool, gForceOrientationTexture, false, kVariableNonpersistent);
-
-VAR(int, gOverlayType, -1, kVariableNonpersistent);
-VAR(int, gOverlayFormat, 0, kVariableNonpersistent);
-
-VAR(int, gForcedVSyncTime, 0, kVariableNonpersistent);
-
-VAR(bool, gForceEyeColor, false, kVariableNonpersistent);
-
-VAR(bool, gLogSensorData, false, kVariableNonpersistent);
 
 // For testing warping we need to sometimes turn off frame submit. These work with gTouchTogglesSubmitFrame
 bool gSubmitFrame = true;
@@ -151,30 +132,6 @@ void * LocalApp::GetFileBuffer(const char *pFileName, int *pBufferSize)
 bool LocalApp::LoadTextureCommon(GLuint *pTexture, const char *pFileName)
 {
     GLenum TexTarget;
-    KtxTexture TexHelper;
-
-    LOGI("Loading %s...", pFileName);
-
-    // Open File
-    int TexBuffSize;
-    char *pTexBuffer = (char *)GetFileBuffer(pFileName, &TexBuffSize);
-    if (pTexBuffer == NULL)
-    {
-        LOGE("Unable to open file: %s", pFileName);
-        return false;
-    }
-
-    // Use the helper to create the texture
-    TKTXHeader* pOutHeader = NULL;
-    TKTXErrorCode ResultCode = TexHelper.LoadKtxFromBuffer(pTexBuffer, TexBuffSize, pTexture, &TexTarget, pOutHeader);
-    if (ResultCode != KTX_SUCCESS)
-    {
-        LOGE("Unable to load texture: %s", pFileName);
-    }
-
-
-    // No longer need buffers
-    free(pTexBuffer);
 
     return true;
 }
@@ -285,17 +242,7 @@ void LocalApp::UpdateEglImage()
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Bind the blit shader...
-    mBlitShader.Bind();
 
-    // ... set uniforms ...
-    glm::vec4 scaleoffset = glm::vec4(1.0f, 1.0f, 0.0f, 0.0f);
-    mBlitShader.SetUniformVec4(1, scaleoffset);
-
-    // ... set textures ...
-    mBlitShader.SetUniformSampler("srcTex", mOverlayTextures[kQuadOverlay], GL_TEXTURE_2D);
-
-    // ... render the quad
-    mBlitMesh.Submit();
 
     // Unbind the frame buffer
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -303,94 +250,15 @@ void LocalApp::UpdateEglImage()
 
 void LocalApp::CreateBlitAssets()
 {
-    // **********************
-    // Geometry
-    // **********************
-    struct quadVert
-    {
-        float x, y, u, v;
-    };
 
-    static quadVert quadVertices[4] =
-            {
-                    { -1.0f, -1.0f, 0.0f, 0.0f },
-                    { -1.0f, 1.0f, 0.0f, 1.0f, },
-                    { 1.0f, -1.0f, 1.0f, 0.0f },
-                    { 1.0f, 1.0f, 1.0f, 1.0f }
-            };
-
-    static unsigned int quadIndices[6] =
-            {
-                    0, 2, 1, 1, 2, 3
-            };
-
-    SvrProgramAttribute attribs[2] =
-            {
-                    {
-                            kPosition,                  //index
-                            2,                          //size
-                            GL_FLOAT,                   //type
-                            false,                      //normalized
-                            sizeof(quadVert),			//stride
-                            0							//offset
-                    },
-                    {
-                            kTexcoord0,                 //index
-                            2,                          //size
-                            GL_FLOAT,                   //type
-                            false,                      //normalized
-                            sizeof(quadVert),			//stride
-                            8							//offset
-                    }
-            };
-
-    mBlitMesh.Initialize(   &attribs[0], 2,
-                            &quadIndices[0], 6,
-                            &quadVertices[0], sizeof(quadVert) * 4, 4);
-
-    // **********************
-    // Shader
-    // **********************
-    InitializeShader(mBlitShader, "shaders/blit_v.glsl", "shaders/blit_f.glsl", "blitVs", "blitFs");
 }
 
 void LocalApp::InitializeModel(const char* path)
 {
-    char filePath[512];
 
-    SvrGeometry*    pObjGeom;
-    int             nObjGeom;
-    sprintf(filePath, "%s/%s", mAppContext.externalPath, path);
-    SvrGeometry::CreateFromObjFile(filePath, &pObjGeom, nObjGeom);
-    mpModel = &pObjGeom[0];
-
-    InitializeShader(mModelShader, "shaders/model_v.glsl", "shaders/model_f.glsl", "modelVs", "modelFs");
-    InitializeShader(mMultiViewShader, "shaders/multiview_v.glsl", "shaders/multiview_f.glsl", "multiViewVs", "multiViewFs");
 }
 
-void LocalApp::InitializeShader(Svr::SvrShader &whichShader, const char* vertexPath, const char* fragmentPath, const char* vertexName, const char* fragmentName)
-{
-    int fileBuffSize;
 
-    char *pVsBuffer = (char *)GetFileBuffer(vertexPath, &fileBuffSize);
-    if (pVsBuffer == NULL)
-    {
-        return;
-    }
-
-    char *pFsBuffer = (char *)GetFileBuffer(fragmentPath, &fileBuffSize);
-    if (pFsBuffer == NULL)
-    {
-        free(pVsBuffer);
-        return;
-    }
-
-    whichShader.Initialize(pVsBuffer, pFsBuffer, vertexName, fragmentName);
-
-    // No longer need buffers
-    free(pVsBuffer);
-    free(pFsBuffer);
-}
 
 void LocalApp::InitializeFunctions()
 {
@@ -441,11 +309,6 @@ void LocalApp::DestroyBlitAssets()
 
 }
 
-void LocalApp::AllocateEyeBuffers()
-{
-
-
-}
 
 void L_CreateLayout(float centerX, float centerY, float radiusX, float radiusY, svrOverlayLayout *pLayout)
 {
@@ -468,22 +331,7 @@ void LocalApp::Update()
     mFrameCount++;
 
 
-    if (mInput.IsPointerDown(0))
-    {
-        if (gTouchTogglesSubmitFrame)
-        {
-            if (TimeNow - gLastToggleTime > 1000)
-            {
-                gLastToggleTime = TimeNow;
-                gSubmitFrame = !gSubmitFrame;
-            }
-        }
-        else
-        {
-            // Recenter the pose
-            svrRecenterPose();
-        }
-    }
+
 
     PROFILE_EXIT(GROUP_WORLDRENDER);
 }
@@ -493,7 +341,7 @@ void LocalApp::Render()
 {
 
     float predictedTimeMs = svrGetPredictedDisplayTime();
-    svrHeadPoseState poseState = svrGetPredictedHeadPose(predictedTimeMs);
+    svrHeadPoseState poseState = svrGetPredictedHeadPose(6);
 
     if (true)
     {
