@@ -15,10 +15,10 @@
 #include "svrApi.h"
 
 #define VERBOSE_LOGGING_ENABLED 0
-
-#define LOGE(...) __android_log_print( ANDROID_LOG_ERROR, "QiyiSvr", __VA_ARGS__ )
-#define LOGI(...) __android_log_print( ANDROID_LOG_INFO, "QiyiSvr", __VA_ARGS__ )
-#define LOGW(...) __android_log_print( ANDROID_LOG_WARN, "QiyiSvr", __VA_ARGS__ )
+#define TAG "QiyiSvr"
+#define LOGE(...) __android_log_print( ANDROID_LOG_ERROR, TAG, __VA_ARGS__ )
+#define LOGI(...) __android_log_print( ANDROID_LOG_INFO, TAG, __VA_ARGS__ )
+#define LOGW(...) __android_log_print( ANDROID_LOG_WARN, TAG, __VA_ARGS__ )
 
 #if defined(NDEBUG) || !VERBOSE_LOGGING_ENABLED
 #define LOGV(...)
